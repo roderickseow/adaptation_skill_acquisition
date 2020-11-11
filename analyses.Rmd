@@ -13,7 +13,8 @@ invisible(lapply(x, library, character.only = TRUE))
 
 ```{r load-data}
 
-setwd('C:/Users/Roderick/Box Sync/Research Projects/Variability Adaptation/open-data/adaptation_skill_acquisition')
+data_dir <- 'location of data files'
+setwd(data_dir)
 
 human_per_game <- fread('human_per_game.csv')
 models_slowdown_per_game <- fread('models_slowdown_per_game.csv')
