@@ -20,7 +20,6 @@ human_per_game <- fread('human_per_game.csv')
 models_slowdown_per_game <- fread('models_slowdown_per_game.csv')
 models_noslow_per_game <- fread('models_noslow_per_game.csv')
 models_decay_per_game <- fread('models_decay_per_game.csv')
-#best_control_values <- fread('control_values_est_best.csv')
 
 ```
 
@@ -116,7 +115,6 @@ summary(regression_switch('model'))
 
 Comparing switch-faster and switch-slower effects using a F test
 ```{r switch-effect-comparison}
-
 
 linearHypothesis(regression_switch('human'), "switch.slower = switch.faster", test="F", verbose=TRUE)
 linearHypothesis(regression_switch('model'), "switch.slower = switch.faster", test="F", verbose=TRUE)
