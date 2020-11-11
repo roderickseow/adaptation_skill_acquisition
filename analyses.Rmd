@@ -1,0 +1,194 @@
+---
+title: "Analyses"
+output:
+  html_notebook
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r load-libraries, message = FALSE}
+x <- c("ggplot2", "vroom", "MKinfer", "runner", "ff", "car", "lme4", "egg", "boot", "cowplot", "R.utils", "dplyr", "tidyverse", "grid", "gridExtra", "RColorBrewer", "data.table", "lme4", "leaps", "glmnet", "stargazer")
+invisible(lapply(x, library, character.only = TRUE))
+```
+
+```{r load-data}
+
+setwd('C:/Users/Roderick/Box Sync/Research Projects/Variability Adaptation/open-data/adaptation_skill_acquisition')
+
+human_per_game <- fread('human_per_game.csv')
+models_slowdown_per_game <- fread('models_slowdown_per_game.csv')
+models_noslow_per_game <- fread('models_noslow_per_game.csv')
+models_decay_per_game <- fread('models_decay_per_game.csv')
+#best_control_values <- fread('control_values_est_best.csv')
+
+```
+
+
+Comparing the effect of varied vs. consistent training on points in block 5 using a t-test
+```{r varied-consistent-comparison}
+
+block5_transfer_exp1 <- human_per_game %>%
+  filter(experiment==1, block==5, condition!="MMMMM") %>%
+  group_by(participant, varied) %>%
+  summarize(block.points = mean(raw.points))
+
+block5_transfer_exp2 <- human_per_game %>%
+  filter(experiment==2, block==5, condition!="HHHHH") %>%
+  group_by(participant, varied) %>%
+  summarize(block.points = mean(raw.points))
+
+t.test(block.points ~ varied, data=block5_transfer_exp1)
+t.test(block.points ~ varied, data=block5_transfer_exp2)
+```
+
+Estimating practice and acceleration effects
+```{r regression-practice-acceleration}
+
+regression_practice_acceleration <- function(organism){
+
+  data <- NULL
+  if(organism =='human'){
+    data <- human_per_game
+  }
+  else{
+    data <- models_decay_per_game %>%
+      filter(decay.value==0.992)
+  }
+  
+  lmm.model <- data %>%
+    mutate(trial.num.in.block = ((trial.num-1) %% 8) + 1) %>% 
+    group_by(participant, log.block, acceleration) %>%
+    summarize(raw.points = mean(raw.points)) %>%
+    lmer(raw.points ~ log.block + acceleration + (1 | participant), data = ., REML = FALSE)
+
+
+  return(lmm.model)
+}
+
+
+regression_practice_acceleration('human')
+regression_practice_acceleration('model')
+
+```
+
+Estimating switch-faster and switch-slower effects
+```{r}
+
+regression_switch <- function(organism){
+  
+  data <- NULL
+  if(organism =='human'){
+    data <- human_per_game
+  }
+  else{
+    data <- models_decay_per_game %>%
+      filter(decay.value==0.992)
+  }
+  
+  lmm.model <- regression_practice_acceleration(organism)
+  
+  # Extract coefficients for block,  acceleration, and individual effects
+  # Adjust points using extracted coefficients
+  lmm.model.coef <- coef(lmm.model)$participant
+  names(lmm.model.coef) <- c("sub.coef", "log.block.coef", "acceleration.coef")
+  lmm.model.coef <- tibble::rownames_to_column(lmm.model.coef, "participant")
+  updated.data.all <- left_join(x=data,y=lmm.model.coef) %>%
+    mutate(adjust.raw.points = raw.points - sub.coef - log.block.coef*log.block - 
+             acceleration.coef*acceleration)
+  
+  
+  lm.adjusted.switch <- updated.data.all %>%
+    mutate(trial.num.in.block = ((trial.num-1) %% 8) + 1,
+           switch.slower = -1*switch.slower) %>% 
+    filter(trial.num.in.block==1, block!=1) %>%
+    group_by(participant, switch.faster, switch.slower, block) %>%
+    summarize(adjust.raw.points = mean(adjust.raw.points)) %>%
+    lm(adjust.raw.points ~ switch.faster + switch.slower, data = .)
+  
+  return(lm.adjusted.switch)
+}
+
+summary(regression_switch('human'))
+summary(regression_switch('model'))
+
+```
+
+Comparing switch-faster and switch-slower effects using a F test
+```{r switch-effect-comparison}
+
+
+linearHypothesis(regression_switch('human'), "switch.slower = switch.faster", test="F", verbose=TRUE)
+linearHypothesis(regression_switch('model'), "switch.slower = switch.faster", test="F", verbose=TRUE)
+```
+
+Model fits to human data
+```{r model-fits}
+
+# Merge human with model data
+first_fit_data <- human_per_game %>%
+    mutate(bad.weight = 'human',
+           decay.value = 'human',
+           slowdown = 'human',
+           minThrustTime = 'human',
+           player.type = 'human') %>%
+  rbind(., models_noslow_per_game, models_slowdown_per_game)
+
+second_fit_data <- human_per_game %>%
+    mutate(bad.weight = 'human',
+           decay.value = 'human',
+           slowdown = 'human',
+           minThrustTime = 'human',
+           player.type = 'human') %>%
+  rbind(., models_decay_per_game)
+
+# Chi square function
+chi_fits_avg_se <- function(data, var){
+    myvar <- enquo(var)
+
+    temp <- data %>%
+        group_by(trial.num, condition, player.type) %>%
+        summarise(mean = mean(!!myvar))
+        
+    sq.se <- data %>% 
+        filter(player.type == 'human') %>%
+        group_by(trial.num, condition, player.type) %>%
+        summarise(mean = mean(!!myvar), 
+                  sq.std.error = (sd(!!myvar)**2)/length(!!myvar))
+
+    avg.sq.se <- mean(sq.se$sq.std.error)
+    
+    temp_wide <- spread(temp, player.type, mean)
+
+    temp_wide$trial.num <- NULL
+    temp_wide$condition <- NULL
+    
+    myfun <- function(i){
+        sum((i - temp_wide$human)**2)
+    }
+    
+    SSE <- apply(temp_wide, 2, myfun)
+    chi.sq <- SSE/avg.sq.se
+    
+    full_stats <- data.frame(chi.sq)
+    colnames(full_stats) <- c(sprintf('chi.sq.%s', as_label(myvar)))
+    setDT(full_stats, keep.rownames = 'player.type')[]
+    return(full_stats)
+}
+
+# Fits for first set of model comparisons
+first_fit_chis <- merge(chi_fits_avg_se(first_fit_data, rectangles.cleared), 
+                      chi_fits_avg_se(first_fit_data, deaths)) %>%
+  mutate(chi.sq.combined = chi.sq.rectangles.cleared + chi.sq.deaths) %>%
+  na.omit(.)
+
+# Fits for second set of model comparisons
+second_fit_chis <- merge(chi_fits_avg_se(second_fit_data, rectangles.cleared), 
+                      chi_fits_avg_se(second_fit_data, deaths)) %>%
+  mutate(chi.sq.combined = chi.sq.rectangles.cleared + chi.sq.deaths) %>%
+  na.omit(.)
+
+first_fit_chis
+second_fit_chis
+
+```
+
