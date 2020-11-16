@@ -31,6 +31,8 @@ model_code/decay_set/
 * Contains model codes for models in second set of comparisons
 * Models only vary in decay parameter (0.9/0.99/0.991-0.999)
 
+Model code scripts will require ACT-R software to run - please email yseow@andrew.cmu.edu if interested.
+
 Analyses
 -------------------
 
