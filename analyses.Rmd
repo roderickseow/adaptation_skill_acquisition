@@ -7,7 +7,7 @@ editor_options:
 ---
 
 ```{r load-libraries, message = FALSE}
-x <- c("ggplot2", "vroom", "MKinfer", "runner", "ff", "car", "lme4", "egg", "boot", "cowplot", "R.utils", "dplyr", "tidyverse", "grid", "gridExtra", "RColorBrewer", "data.table", "lme4", "leaps", "glmnet", "stargazer")
+x <- c("vroom", "MKinfer", "ff", "car", "lme4", "boot", "R.utils", "dplyr", "tidyverse", "data.table", "lme4", "leaps", "glmnet")
 invisible(lapply(x, library, character.only = TRUE))
 ```
 
