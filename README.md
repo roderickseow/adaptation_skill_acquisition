@@ -20,6 +20,14 @@ data/control_values_est_best
 * Table of controller parameters per game from ACT-R models
 * Contains parameters for individual models and each control parameter
 
+Analyses
+-------------------
+
+analyses.Rmd
+analyses.nb
+* .Rmd file contains the analyses presented in the manuscript
+* To run analyses, set the directory in the analysis script to where the data files are downloaded.
+
 Model code
 -------------------
 
@@ -31,10 +39,8 @@ model_code/decay_set/
 * Contains model codes for models in second set of comparisons
 * Models only vary in decay parameter (0.9/0.99/0.991-0.999)
 
-Analyses
+Model simulation
 -------------------
+act_r_addons/
+* Contains files and instructions for running a model simulation
 
-analyses.Rmd
-analyses.nb
-* .Rmd file contains the analyses presented in the manuscript
-* To run analyses, set the directory in the analysis script to where the data files are downloaded.
