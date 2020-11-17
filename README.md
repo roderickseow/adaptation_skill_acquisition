@@ -39,21 +39,8 @@ model_code/decay_set/
 * Contains model codes for models in second set of comparisons
 * Models only vary in decay parameter (0.9/0.99/0.991-0.999)
 
-<<<<<<< HEAD
 Model simulation
-=======
-Model code scripts will require ACT-R software to run - please email yseow@andrew.cmu.edu if interested.
-
-Analyses
->>>>>>> ec7d2439d278b093c439371bb9b4fb801bcbf8f8
 -------------------
 act_r_addons/
 * Contains files and instructions for running a model simulation
 
-<<<<<<< HEAD
-=======
-analyses.Rmd
-analyses.nb
-* .Rmd file contains the analyses presented in the manuscript
-* To run analyses, set the directory in the analysis script to where the data files are downloaded.
->>>>>>> ec7d2439d278b093c439371bb9b4fb801bcbf8f8
