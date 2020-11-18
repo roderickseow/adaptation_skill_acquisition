@@ -4,16 +4,16 @@ Installing ACT-R
 -------------------
 
 * Download the ACT-R standalone software for your OS from: http://act-r.psy.cmu.edu/software/
+    * Direct download: [Windows](http://act-r.psy.cmu.edu/actr7.x/win-standalone.zip); [Mac](http://act-r.psy.cmu.edu/actr7.x/mac_standalone.zip)
 * Decompress the downloaded package; the main directory should be "ACT-R"
-* Download the "act_r_addons" folder from this repository
+* Download the ["act_r_addons" folder](https://github.com/roderickseow/adaptation_skill_acquisition/tree/main/act_r_addons)
 * Copy the downloaded files into the "ACT-R" folder, replacing files as necessary
 
 Installing the game server
 ---------------------------
 
 * Download the server package for your OS from this repository
-    * Windows: SpaceFortressServer-win.zip
-    * Mac: SpaceFortressServer-mac.tgz
+    * [Windows](https://github.com/roderickseow/adaptation_skill_acquisition/blob/main/SpaceFortressServer-win.zip); [Mac](https://github.com/roderickseow/adaptation_skill_acquisition/blob/main/SpaceFortressServer-mac.tgz)
 * Decompress the downloaded package in the "ACT-R" folder
 
 Running a simulation
