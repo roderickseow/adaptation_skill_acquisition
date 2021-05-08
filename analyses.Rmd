@@ -1,8 +1,9 @@
 ---
 title: "Analyses"
 output:
-  html_notebook
-editor_options: 
+  html_document:
+    df_print: paged
+editor_options:
   chunk_output_type: inline
 ---
 
@@ -12,11 +13,12 @@ invisible(lapply(x, library, character.only = TRUE))
 ```
 
 ```{r load-data}
-
-data_dir <- 'location of data files'
+data_dir <- 'C:/Users/Roderick/Box Sync/Research Projects/Variability Adaptation/open-data/adaptation_skill_acquisition/data'
+# Set data_dir to location of data files
 setwd(data_dir)
 
 human_per_game <- fread('human_per_game.csv')
+follow_up_per_game <- fread('follow_up_per_game.csv')
 models_slowdown_per_game <- fread('models_slowdown_per_game.csv')
 models_noslow_per_game <- fread('models_noslow_per_game.csv')
 models_decay_per_game <- fread('models_decay_per_game.csv')
@@ -24,21 +26,40 @@ models_decay_per_game <- fread('models_decay_per_game.csv')
 ```
 
 
-Comparing the effect of varied vs. consistent training on points in block 5 using a t-test
+Comparing the effect of varied vs. consistent training on points in block 5 using multiple regression
 ```{r varied-consistent-comparison}
 
-block5_transfer_exp1 <- human_per_game %>%
+human_per_game %>%
   filter(experiment==1, block==5, condition!="MMMMM") %>%
-  group_by(participant, varied) %>%
-  summarize(block.points = mean(raw.points))
+  group_by(participant, varied, switch.type) %>%
+  summarise(raw.points = mean(raw.points)) %>%
+  lm(raw.points ~ as.factor(varied)*as.factor(switch.type), data=.) %>%
+  summary()
 
-block5_transfer_exp2 <- human_per_game %>%
+human_per_game %>%
   filter(experiment==2, block==5, condition!="HHHHH") %>%
-  group_by(participant, varied) %>%
-  summarize(block.points = mean(raw.points))
+  group_by(participant, varied, switch.type) %>%
+  summarise(raw.points = mean(raw.points)) %>%
+  lm(raw.points ~ as.factor(varied)*as.factor(switch.type), data=.) %>%
+  summary() 
 
-t.test(block.points ~ varied, data=block5_transfer_exp1)
-t.test(block.points ~ varied, data=block5_transfer_exp2)
+```
+Comparing the effect of blocked vs. interleaved training on points in block 5 using t-test
+```{r follow-up-comparison}
+follow_transfer <- follow_up_per_game %>%
+  group_by(participant, condition, experiment) %>%
+  filter(trial_num > 32) %>%
+  summarise(raw_points = mean(raw_points)) %>%
+  mutate(interleaved = case_when(condition %in% c("LH16M", "HL16M") ~ 1,
+                                 TRUE ~ 0)) %>%
+  ungroup()
+
+
+t.test(follow_transfer[follow_transfer$interleaved==0, 'raw_points'],
+       follow_transfer[follow_transfer$interleaved==1, 'raw_points'])
+
+sd(as.numeric(unlist(follow_transfer[follow_transfer$interleaved==1, 'raw_points'])))
+
 ```
 
 Estimating practice and acceleration effects
